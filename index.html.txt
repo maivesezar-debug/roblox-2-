@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wonderful Shop — Pay Now / Pay After</title>
+  <style>
+    /* ===== Reset & Variables ===== */
+    *{margin:0;padding:0;box-sizing:border-box;}
+    :root {
+      --primary:#6C63FF;
+      --secondary:#FF6584;
+      --bg:#f4f6fb;
+      --card:#ffffff;
+      --text:#333;
+      --muted:#666;
+      --radius:18px;
+      --shadow:0 6px 18px rgba(0,0,0,0.1);
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      padding:20px;
+    }
+    h1,h2,h3 {font-weight:600;}
+
+
+    /* ===== Layout ===== */
+    .container {
+      display:grid;
+      grid-template-columns:2fr 1fr;
+      gap:30px;
+      width:100%;
+      max-width:1200px;
+    }
+    header {
+      width:100%;
+      max-width:1200px;
+      margin-bottom:20px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    header h1 {
+      font-size:26px;
+      background:linear-gradient(90deg,var(--primary),var(--secondary));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+
+    /* ===== Products ===== */
+    .products {
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+      gap:20px;
+    }
+    .card {
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:15px;
+      box-shadow:var(--shadow);
+      transition:transform 0.2s ease, box-shadow 0.2s ease;
+      cursor:pointer;
+    }
+    .card:hover {
+      transform:translateY(-6px);
+      box-shadow:0 12px 28px rgba(0,0,0,0.15);
+    }
+    .card img {
+      width:100%;
+      height:160px;
+      object-fit:cover;
+      border-radius:var(--radius);
+    }
+    .card h3 {margin:10px 0 6px;}
+    .card p {font-size:14px;color:var(--muted);min-height:34px;}
+    .price-row {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-top:10px;
+    }
+    .price {font-weight:700;color:var(--primary);}
+    .btn {
+      padding:8px 14px;
+      border:none;
+      border-radius:10px;
+      cursor:pointer;
+      font-size:14px;
+      font-weight:600;
+      transition:all 0.2s ease;
+    }
+    .btn-primary {
+      background:linear-gradient(90deg,var(--primary),var(--secondary));
+      color:white;
+    }
+    .btn-primary:hover {opacity:0.9;}
+    .btn-ghost {
+      background:transparent;
+      border:1px solid #ddd;
+      color:var(--muted);
+    }
+    .btn-ghost:hover {border-color:var(--primary);color:var(--primary);}
+
+
+    /* ===== Cart ===== */
+    .cart {
+      background:var(--card);
+      padding:18px;
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      position:sticky;
+      top:20px;
+    }
+    .cart h2 {margin-bottom:10px;}
+    .empty {text-align:center;color:var(--muted);padding:30px 0;}
+    .cart-items {display:flex;flex-direction:column;gap:14px;max-height:400px;overflow-y:auto;}
+    .item {
+      display:flex;
+      gap:10px;
+      align-items:center;
+      background:#f9f9ff;
+      padding:8px;
+      border-radius:12px;
+    }
+    .thumb {
+      width:60px;height:60px;border-radius:12px;object-fit:cover;
+    }
+    .meta {flex:1;}
+    .meta b {display:block;margin-bottom:4px;}
+    .qty {font-size:13px;color:var(--muted);}
+    .total-row {
+      display:flex;justify-content:space-between;
+      margin-top:16px;font-weight:600;
+    }
+    .checkout {margin-top:14px;display:flex;gap:10px;}
+
+
+    /* ===== Modal ===== */
+    .modal-back {
+      position:fixed;inset:0;
+      background:rgba(0,0,0,0.6);
+      display:none;align-items:center;justify-content:center;
+      z-index:1000;
+    }
+    .modal {
+      background:var(--card);
+      padding:20px;
+      border-radius:var(--radius);
+      width:95%;max-width:480px;
+      box-shadow:var(--shadow);
+      text-align:center;
+    }
+    .modal h3 {margin-bottom:10px;}
+    .input {
+      width:100%;padding:10px;
+      border:1px solid #ddd;
+      border-radius:10px;
+      margin-top:6px;
+      margin-bottom:12px;
+    }
+    .modal-actions {display:flex;justify-content:flex-end;gap:10px;}
+
+
+    /* ===== Loading Spinner ===== */
+    .spinner {
+      border:6px solid #eee;
+      border-top:6px solid var(--primary);
+      border-radius:50%;
+      width:60px;height:60px;
+      margin:20px auto;
+      animation:spin 1s linear infinite;
+    }
+    @keyframes spin {100% {transform:rotate(360deg);}}
+
+
+    footer {margin-top:30px;color:var(--muted);font-size:13px;}
+    @media(max-width:900px){
+      .container {grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Wonderful Shop</h1>
+    <div>Cart: <span id="cart-count">0</span></div>
+  </header>
+
+
+  <div class="container">
+    <!-- Products -->
+    <section>
+      <h2>Products</h2>
+      <div class="products" id="products"></div>
+    </section>
+
+
+    <!-- Cart -->
+    <aside class="cart">
+      <h2>Your Cart</h2>
+      <div id="cart-items" class="cart-items"></div>
+      <div id="cart-empty" class="empty">Cart is empty</div>
+      <div class="total-row">
+        <span>Total</span>
+        <span id="cart-total">₱0.00</span>
+      </div>
+      <div class="checkout">
+        <button class="btn btn-primary" id="pay-now">Pay Now</button>
+        <button class="btn btn-ghost" id="pay-after">Pay After</button>
+      </div>
+    </aside>
+  </div>
+
+
+  <!-- Modal -->
+  <div class="modal-back" id="modal">
+    <div class="modal" id="modal-content">
+      <!-- Dynamic content goes here -->
+    </div>
+  </div>
+
+
+  <footer>✨ Styled with love — Demo only (no real payments)</footer>
+
+
+<script>
+const products=[
+  {id:1,title:"Sneakers",price:1599,img:"https://images.unsplash.com/photo-1600180758898-11b6b05a6f1b?w=600"},
+  {id:2,title:"Backpack",price:899,img:"https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600"},
+  {id:3,title:"Earbuds",price:1299,img:"https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600"},
+  {id:4,title:"Ceramic Mug",price:249,img:"https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600"},
+];
+let cart={};
+function renderProducts(){
+  const wrap=document.getElementById("products");
+  wrap.innerHTML="";
+  products.forEach(p=>{
+    wrap.innerHTML+=`
+    <div class="card">
+      <img src="${p.img}" alt="${p.title}">
+      <h3>${p.title}</h3>
+      <p>High quality ${p.title.toLowerCase()}.</p>
+      <div class="price-row">
+        <span class="price">₱${p.price}</span>
+        <button class="btn btn-primary" onclick="addToCart(${p.id})">Add</button>
+      </div>
+    </div>`;
+  });
+}
+function addToCart(id){
+  cart[id]=(cart[id]||0)+1;
+  renderCart();
+}
+function renderCart(){
+  const items=document.getElementById("cart-items");
+  const empty=document.getElementById("cart-empty");
+  items.innerHTML="";
+  let total=0,count=0;
+  for(let id in cart){
+    const p=products.find(x=>x.id==id);
+    const qty=cart[id];
+    total+=p.price*qty; count+=qty;
+    items.innerHTML+=`
+      <div class="item">
+        <img class="thumb" src="${p.img}">
+        <div class="meta"><b>${p.title}</b><span class="qty">₱${p.price} × ${qty}</span></div>
+        <div>
+          <button class="btn-ghost btn" onclick="changeQty(${id},-1)">-</button>
+          <button class="btn-ghost btn" onclick="changeQty(${id},1)">+</button>
+        </div>
+      </div>`;
+  }
+  document.getElementById("cart-count").textContent=count;
+  document.getElementById("cart-total").textContent="₱"+total.toFixed(2);
+  empty.style.display=count? "none":"block";
+}
+function changeQty(id,delta){
+  cart[id]+=delta;
+  if(cart[id]<=0) delete cart[id];
+  renderCart();
+}
+
+
+// ===== Modal + Verification =====
+function showModal(content){
+  document.getElementById("modal-content").innerHTML=content;
+  document.getElementById("modal").style.display="flex";
+}
+function closeModal(){document.getElementById("modal").style.display="none";}
+
+
+function verifyAndCheckout(mode){
+  // Step 1: show loading spinner
+  showModal(`
+    <h3>Verifying your order...</h3>
+    <div class="spinner"></div>
+    <p>Please wait a moment</p>
+  `);
+
+
+  // Step 2: after 3 seconds, show checkout form
+  setTimeout(()=>{
+    showModal(`
+      <h3>${mode==="now"?"Pay Now":"Pay After"}</h3>
+      <p>Fill in your details</p>
+      <input class="input" id="name" placeholder="Full Name">
+      <input class="input" id="phone" placeholder="Phone Number">
+      <input class="input" id="address" placeholder="Address">
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmOrder('${mode}')">Confirm</button>
+      </div>
+    `);
+  },3000);
+}
+
+
+function confirmOrder(mode){
+  alert("✅ Order placed with "+mode.toUpperCase()+" option!");
+  cart={}; renderCart(); closeModal();
+}
+
+
+document.getElementById("pay-now").onclick=()=>verifyAndCheckout("now");
+document.getElementById("pay-after").onclick=()=>verifyAndCheckout("after");
+
+
+renderProducts(); renderCart();
+</script>
+</body>
+</html>
